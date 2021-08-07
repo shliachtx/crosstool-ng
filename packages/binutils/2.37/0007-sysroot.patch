@@ -1,0 +1,43 @@
+---
+ ld/ldfile.c |   13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
+
+--- a/ld/ldfile.c
++++ b/ld/ldfile.c
+@@ -340,18 +340,25 @@
+      directory first.  */
+   if (!entry->flags.maybe_archive)
+     {
+-      if (entry->flags.sysrooted && IS_ABSOLUTE_PATH (entry->filename))
++      /* For absolute pathnames, try to always open the file in the
++        sysroot first. If this fails, try to open the file at the
++        given location.  */
++      entry->flags.sysrooted = is_sysrooted_pathname (entry->filename);
++      if (!entry->flags.sysrooted && IS_ABSOLUTE_PATH (entry->filename)
++         && ld_sysroot)
+ 	{
+ 	  char *name = concat (ld_sysroot, entry->filename,
+ 			       (const char *) NULL);
+ 	  if (ldfile_try_open_bfd (name, entry))
+ 	    {
+ 	      entry->filename = name;
++	      entry->flags.sysrooted = TRUE;
+ 	      return true;
+ 	    }
+ 	  free (name);
+ 	}
+-      else if (ldfile_try_open_bfd (entry->filename, entry))
++
++      if (ldfile_try_open_bfd (entry->filename, entry))
+ 	return true;
+ 
+       if (IS_ABSOLUTE_PATH (entry->filename))
+@@ -472,7 +479,7 @@
+ 	      argv[1] = "missing-lib";
+ 	      argv[2] = (char *) entry->local_sym_name;
+ 	      argv[3] = NULL;
+-      
++
+ 	      if (verbose)
+ 		einfo (_("%P: About to run error handling script '%s' with arguments: '%s' '%s'\n"),
+ 		       argv[0], argv[1], argv[2]);
