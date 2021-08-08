@@ -21,7 +21,7 @@
  	  if (ldfile_try_open_bfd (name, entry))
  	    {
  	      entry->filename = name;
-+	      entry->flags.sysrooted = TRUE;
++	      entry->flags.sysrooted = true;
  	      return true;
  	    }
  	  free (name);
